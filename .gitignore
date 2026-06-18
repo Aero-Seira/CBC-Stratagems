@@ -2,8 +2,10 @@
 
 .gradle/
 build/
+bin/
 out/
 run/
 
+.eclipse/
 .idea/
 *.iml
