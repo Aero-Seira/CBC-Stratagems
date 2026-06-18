@@ -1,0 +1,9 @@
+.external/
+
+.gradle/
+build/
+out/
+run/
+
+.idea/
+*.iml
