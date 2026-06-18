@@ -1,0 +1,12 @@
+{
+  "panel": "cbc_stratgems:textures/gui/stratagem/panel.png",
+  "arrow_up": "cbc_stratgems:textures/gui/stratagem/arrow_up.png",
+  "arrow_down": "cbc_stratgems:textures/gui/stratagem/arrow_down.png",
+  "arrow_left": "cbc_stratgems:textures/gui/stratagem/arrow_left.png",
+  "arrow_right": "cbc_stratgems:textures/gui/stratagem/arrow_right.png",
+  "arrow_success": "cbc_stratgems:textures/gui/stratagem/arrow_success.png",
+  "arrow_failed": "cbc_stratgems:textures/gui/stratagem/arrow_failed.png",
+  "icon_placeholder": "cbc_stratgems:textures/gui/stratagem/icon_placeholder.png",
+  "text_color": "#FFFFFF",
+  "accent_color": "#FF4040"
+}
