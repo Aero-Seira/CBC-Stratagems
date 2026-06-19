@@ -1,4 +1,4 @@
-# CBC-Stratgems 技术设计文档
+# CBC-Stratagems 技术设计文档
 
 ## 0. 状态与范围
 
@@ -71,8 +71,8 @@ CBC 自身继续决定这些内容：
 
 ```json
 {
-  "name": { "translate": "stratagem.cbc_stratgems.he_barrage" },
-  "icon": "cbc_stratgems:textures/gui/stratagem/he_barrage.png",
+  "name": { "translate": "stratagem.cbc_stratagems.he_barrage" },
+  "icon": "cbc_stratagems:textures/gui/stratagem/he_barrage.png",
   "command": ["up", "right", "down", "down"],
   "cooldown_ticks": 1800,
   "countdown_ticks": 100,
@@ -107,14 +107,14 @@ CBC 自身继续决定这些内容：
 ### 属性归属
 
 - CBC 炮弹自身决定：实体伤害、爆炸半径/威力、穿深、韧性、偏转、重力、阻力、fuze 行为、fluid 内容、命中效果。
-- CBC-Stratgems 战备配置决定：何时开火、从哪里开火、瞄准哪里、发几发、间隔、散布、power、冷却、倒计时、显示文本和图标。
+- CBC-Stratagems 战备配置决定：何时开火、从哪里开火、瞄准哪里、发几发、间隔、散布、power、冷却、倒计时、显示文本和图标。
 
 ## 3. 视觉效果
 
 ### 资源包可替换资源
 
 - 非物品客户端资源不得用代码硬绘制成固定外观。指令界面背景、边框、输入箭头、成功/失败状态、marker 图标占位等都以 `ResourceLocation` 引用纹理。
-- 第一版提供默认 UI 主题资源，例如 `assets/cbc_stratgems/cbc_stratgems/ui/default.json`，字段包含 panel texture、箭头 idle/active/success/fail 纹理、默认图标占位、颜色和布局参数。
+- 第一版提供默认 UI 主题资源，例如 `assets/cbc_stratagems/cbc_stratagems/ui/default.json`，字段包含 panel texture、箭头 idle/active/success/fail 纹理、默认图标占位、颜色和布局参数。
 - 资源包可以替换默认纹理，也可以覆盖 UI 主题 JSON。战备自身的 `icon` 字段继续由战备 JSON 指向资源包纹理。
 - 不把箭头符号写成硬编码字符；即使第一版视觉简单，也使用箭头纹理或主题资源中的 glyph/texture 配置。
 
@@ -182,9 +182,9 @@ Marker entity 需要同步：
 
 ### 界面键位与输入
 
-- 战备界面打开由可更改键位控制，注册 `open_stratagem_panel` KeyMapping；默认键位在实现阶段选择，用户可在 Minecraft 控制设置中修改。
-- `CALLER` 状态下，玩家按下 `open_stratagem_panel` 且主手持装置时，客户端向服务端请求开始输入；服务端通过后开始 use/session 并打开 overlay。
-- 保留右键物品使用作为服务端能力入口，但不把“打开战备界面”硬绑定到固定鼠标键。原版持续使用入口见 NeoForm sources zip `Item.java:162-185`、`ItemUtils.java:9-13`。
+- 战备界面默认由主手持 `stratagem_device` 右键长按打开，松开右键取消未完成输入。该行为与 `docs/stratagem-concept.md` 保持一致。
+- 注册 `open_stratagem_panel` KeyMapping 作为可选辅助入口，默认未绑定；用户可在 Minecraft 控制设置中自行绑定。
+- `CALLER` 状态下，玩家右键长按装置或激活已绑定的 `open_stratagem_panel` 时，客户端向服务端请求开始输入；服务端通过后开始 use/session 并打开 overlay。原版持续使用入口见 NeoForm sources zip `Item.java:162-185`、`ItemUtils.java:9-13`。
 - 客户端在 use 持续期间显示 overlay，并在 `ClientTickEvent` 读取 WASD 输入。CBC 读取 `mc.player.input.left/right/up/down` 的路径可参考 `.external/CreateBigCannons/src/main/java/rbasamoyai/createbigcannons/CBCClientCommon.java:149-164`。
 - 战备界面可以被其他操作打断：切换物品、打开其他 screen、受控移动状态变化、死亡、松开/取消键位或服务端拒绝都会关闭 session。
 - 当战备界面处于活跃状态时，WASD 输入优先级属于本模组：客户端消费方向键边沿并阻止同一 tick 的移动/其他 WASD 相关逻辑覆盖本次指令。非 WASD 操作仍可打断界面。

@@ -1,0 +1,38 @@
+{
+  "ui_open": {
+    "subtitle": "subtitles.cbc_stratagems.ui_open",
+    "sounds": []
+  },
+  "ui_close": {
+    "subtitle": "subtitles.cbc_stratagems.ui_close",
+    "sounds": []
+  },
+  "input": {
+    "subtitle": "subtitles.cbc_stratagems.input",
+    "sounds": []
+  },
+  "input_failed": {
+    "subtitle": "subtitles.cbc_stratagems.input_failed",
+    "sounds": []
+  },
+  "input_complete": {
+    "subtitle": "subtitles.cbc_stratagems.input_complete",
+    "sounds": []
+  },
+  "beacon_throw": {
+    "subtitle": "subtitles.cbc_stratagems.beacon_throw",
+    "sounds": []
+  },
+  "beacon_land": {
+    "subtitle": "subtitles.cbc_stratagems.beacon_land",
+    "sounds": []
+  },
+  "strike_denied": {
+    "subtitle": "subtitles.cbc_stratagems.strike_denied",
+    "sounds": []
+  },
+  "strike_start": {
+    "subtitle": "subtitles.cbc_stratagems.strike_start",
+    "sounds": []
+  }
+}

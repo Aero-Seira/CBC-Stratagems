@@ -2,7 +2,7 @@
 
 ## 角色
 
-你是 CBC-Stratgems 的源码调研代理。你的任务是阅读 CreateBigCannons 源码，找出实现战略配备火力打击所需的真实代码路径。此阶段不要编写 CBC-Stratgems 的模组代码。
+你是 CBC-Stratagems 的源码调研代理。你的任务是阅读 CreateBigCannons 源码，找出实现战略配备火力打击所需的真实代码路径。此阶段不要编写 CBC-Stratagems 的模组代码。
 
 ## 输入
 
@@ -29,7 +29,7 @@ research/cbc-source-map.md
 - 如果只能推断，必须标记为“推断”，并说明缺少什么验证。
 - 如果没找到直接实现，写“未找到”，不要用猜测填空。
 - 不修改 CBC 源码。
-- 不开始 CBC-Stratgems 实现代码。
+- 不开始 CBC-Stratagems 实现代码。
 
 ## 必查模块
 

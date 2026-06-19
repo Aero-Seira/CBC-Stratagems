@@ -1,4 +1,4 @@
-# CBC-Stratgems 实现计划
+# CBC-Stratagems 实现计划
 
 ## 0. 当前前提
 
@@ -15,15 +15,15 @@
 建议 Java 根包：
 
 ```text
-com.aeroseira.cbcstratgems
+com.aeroseira.cbcstratagems
 ```
 
 建议模块划分：
 
 ```text
-com.aeroseira.cbcstratgems
-  CBCStratgems.java
-  CBCStratgemsClient.java
+com.aeroseira.cbcstratagems
+  CBCStratagems.java
+  CBCStratagemsClient.java
   registry/
     ModItems.java
     ModEntityTypes.java
@@ -81,7 +81,7 @@ com.aeroseira.cbcstratgems
 - `stratagem_device`
   - 同一个物品承担呼叫装置和信标两种状态。
   - 主手右键时优先检查副手是否为许可证；如果是，则执行解锁。
-  - `mode=caller` 时通过 `open_stratagem_panel` KeyMapping 进入输入。
+  - `mode=caller` 时默认通过主手右键长按进入输入。
   - `mode=beacon` 时右键投掷信标。
 - `stratagem_license`
   - 通过 DataComponent 绑定 `stratagem_id`。
@@ -147,9 +147,9 @@ com.aeroseira.cbcstratgems
 ### KeyMappings
 
 - `open_stratagem_panel`
-  - 打开/维持战备输入界面。
+  - 可选辅助键位，用于后续允许玩家改用键盘打开/维持战备输入界面。
   - 用户可在 Minecraft 控制设置中更改。
-  - 默认键位实现阶段确定，避免与 CBC 默认 `C` 冲突。
+  - 默认不绑定，第一版默认入口保持为手持呼叫装置右键长按。
 
 ### SoundEvents
 
@@ -167,7 +167,7 @@ com.aeroseira.cbcstratgems
 
 ### Creative Tab
 
-- 可注册 `cbc_stratgems` 创造标签页，包含 `stratagem_device` 和未绑定的 `stratagem_license`。
+- 可注册 `cbc_stratagems` 创造标签页，包含 `stratagem_device` 和未绑定的 `stratagem_license`。
 - 第二阶段加入 `stratagem_editor`。
 - 已绑定许可证的创造变体可后续通过 creative tab display entries 动态加入；第一版也可先用命令写组件。
 
@@ -178,16 +178,16 @@ com.aeroseira.cbcstratgems
 默认资源建议：
 
 ```text
-assets/cbc_stratgems/textures/gui/stratagem/panel.png
-assets/cbc_stratgems/textures/gui/stratagem/arrow_up.png
-assets/cbc_stratgems/textures/gui/stratagem/arrow_down.png
-assets/cbc_stratgems/textures/gui/stratagem/arrow_left.png
-assets/cbc_stratgems/textures/gui/stratagem/arrow_right.png
-assets/cbc_stratgems/textures/gui/stratagem/arrow_success.png
-assets/cbc_stratgems/textures/gui/stratagem/arrow_failed.png
-assets/cbc_stratgems/textures/gui/stratagem/icon_placeholder.png
-assets/cbc_stratgems/cbc_stratgems/ui/default.json
-assets/cbc_stratgems/sounds.json
+assets/cbc_stratagems/textures/gui/stratagem/panel.png
+assets/cbc_stratagems/textures/gui/stratagem/arrow_up.png
+assets/cbc_stratagems/textures/gui/stratagem/arrow_down.png
+assets/cbc_stratagems/textures/gui/stratagem/arrow_left.png
+assets/cbc_stratagems/textures/gui/stratagem/arrow_right.png
+assets/cbc_stratagems/textures/gui/stratagem/arrow_success.png
+assets/cbc_stratagems/textures/gui/stratagem/arrow_failed.png
+assets/cbc_stratagems/textures/gui/stratagem/icon_placeholder.png
+assets/cbc_stratagems/cbc_stratagems/ui/default.json
+assets/cbc_stratagems/sounds.json
 ```
 
 ### UI Theme JSON
@@ -196,20 +196,20 @@ assets/cbc_stratgems/sounds.json
 
 ```json
 {
-  "panel": "cbc_stratgems:textures/gui/stratagem/panel.png",
-  "arrow_up": "cbc_stratgems:textures/gui/stratagem/arrow_up.png",
-  "arrow_down": "cbc_stratgems:textures/gui/stratagem/arrow_down.png",
-  "arrow_left": "cbc_stratgems:textures/gui/stratagem/arrow_left.png",
-  "arrow_right": "cbc_stratgems:textures/gui/stratagem/arrow_right.png",
-  "arrow_success": "cbc_stratgems:textures/gui/stratagem/arrow_success.png",
-  "arrow_failed": "cbc_stratgems:textures/gui/stratagem/arrow_failed.png",
-  "icon_placeholder": "cbc_stratgems:textures/gui/stratagem/icon_placeholder.png",
+  "panel": "cbc_stratagems:textures/gui/stratagem/panel.png",
+  "arrow_up": "cbc_stratagems:textures/gui/stratagem/arrow_up.png",
+  "arrow_down": "cbc_stratagems:textures/gui/stratagem/arrow_down.png",
+  "arrow_left": "cbc_stratagems:textures/gui/stratagem/arrow_left.png",
+  "arrow_right": "cbc_stratagems:textures/gui/stratagem/arrow_right.png",
+  "arrow_success": "cbc_stratagems:textures/gui/stratagem/arrow_success.png",
+  "arrow_failed": "cbc_stratagems:textures/gui/stratagem/arrow_failed.png",
+  "icon_placeholder": "cbc_stratagems:textures/gui/stratagem/icon_placeholder.png",
   "text_color": "#FFFFFF",
   "accent_color": "#FF4040"
 }
 ```
 
-第一版可以固定读取 `cbc_stratgems:default` 主题；后续再允许客户端配置选择主题。资源包可覆盖默认 JSON 和纹理。
+第一版可以固定读取 `cbc_stratagems:default` 主题；后续再允许客户端配置选择主题。资源包可覆盖默认 JSON 和纹理。
 
 ### 音效调用点
 
@@ -230,22 +230,22 @@ assets/cbc_stratgems/sounds.json
 建议 reload listener 读取：
 
 ```text
-data/<namespace>/cbc_stratgems/stratagems/*.json
+data/<namespace>/cbc_stratagems/stratagems/*.json
 ```
 
 资源 ID 由 namespace + 文件路径决定，例如：
 
 ```text
-data/cbc_stratgems/cbc_stratgems/stratagems/debug_he.json
-=> cbc_stratgems:debug_he
+data/cbc_stratagems/cbc_stratagems/stratagems/debug_he.json
+=> cbc_stratagems:debug_he
 ```
 
 ### JSON 字段
 
 ```json
 {
-  "name": { "translate": "stratagem.cbc_stratgems.debug_he" },
-  "icon": "cbc_stratgems:textures/gui/stratagem/placeholder.png",
+  "name": { "translate": "stratagem.cbc_stratagems.debug_he" },
+  "icon": "cbc_stratagems:textures/gui/stratagem/placeholder.png",
   "command": ["up", "right", "down", "down"],
   "cooldown_ticks": 1800,
   "countdown_ticks": 100,
@@ -285,7 +285,7 @@ data/cbc_stratgems/cbc_stratgems/stratagems/debug_he.json
 
 第一版提供一个调试数据：
 
-- `cbc_stratgems:debug_he`
+- `cbc_stratagems:debug_he`
 - 炮弹：`createbigcannons:he_shell`
 - 指令：短序列，便于频繁测试。
 - 图标：placeholder。
@@ -306,7 +306,8 @@ BEACON_THROWN
 ### 转换
 
 - `CALLER_IDLE -> CALLER_USING`
-  - 主手 `stratagem_device`，无副手许可证，按下 `open_stratagem_panel` KeyMapping 开始持续使用。
+  - 主手 `stratagem_device`，无副手许可证，右键长按开始持续使用。
+  - `open_stratagem_panel` KeyMapping 只作为可选辅助入口，默认不绑定。
   - 服务端先检查维度/天空：维度有天花板或 `!level.canSeeSky(player.blockPosition())` 时拒绝并提示。
 - `CALLER_USING -> BEACON_READY`
   - 服务端收到方向输入后匹配完整战备。
@@ -337,7 +338,7 @@ BEACON_THROWN
 
 ### 输入采集
 
-- 客户端只在玩家按住/激活 `open_stratagem_panel`、正在使用 `stratagem_device` 且 `device_mode=caller` 时采集。
+- 客户端只在玩家右键长按装置或激活可选 `open_stratagem_panel`、正在使用 `stratagem_device` 且 `device_mode=caller` 时采集。
 - 使用 `ClientTickEvent` 检测方向键边沿，不按住重复刷输入。
 - 方向映射：W=`up`，S=`down`，A=`left`，D=`right`。
 - 每个方向边沿发送 `ServerboundStratagemInputPacket`。
@@ -524,7 +525,7 @@ SPAWN_FAILED
 ### M1. NeoForge 1.21.1 模组骨架
 
 - 创建 Gradle 工程。
-- 设置 mod id：`cbc_stratgems`。
+- 设置 mod id：`cbc_stratagems`。
 - 添加依赖：Minecraft 1.21.1、NeoForge、Create、CBC。
 - 验证空模组能启动 client/server。
 
@@ -562,7 +563,8 @@ SPAWN_FAILED
 ### M5. 呼叫装置输入
 
 - 实现 `StratagemDeviceItem` 持续使用。
-- 实现可更改的 `open_stratagem_panel` KeyMapping。
+- 以主手右键长按作为默认打开/维持战备面板路径。
+- 保留可更改但默认未绑定的 `open_stratagem_panel` KeyMapping 作为辅助入口。
 - 实现客户端 WASD 边沿检测。
 - 实现界面活跃时 WASD 优先消费和移动抑制。
 - 实现打开/关闭/输入/失败/完成音效调用点。
@@ -642,11 +644,11 @@ SPAWN_FAILED
 
 - 主手装置 + 副手许可证能解锁。
 - 背包里多个装置不影响解锁目标。
-- 按下 `open_stratagem_panel` 显示 overlay。
-- `open_stratagem_panel` 键位可在控制设置中更改。
+- 主手持装置右键长按显示 overlay。
+- `open_stratagem_panel` 键位可在控制设置中更改，但默认未绑定。
 - 战备界面活跃时 WASD 不移动玩家，只输入箭头。
 - 切换物品、打开其他 screen、死亡等操作会打断界面。
-- 释放打开键取消未完成输入。
+- 松开右键或释放打开键取消未完成输入。
 - 输入正确后装置进入 beacon 状态。
 - 冷却中不能再次锁定同一战备。
 

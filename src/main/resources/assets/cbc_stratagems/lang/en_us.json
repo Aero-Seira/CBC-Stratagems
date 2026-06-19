@@ -1,0 +1,19 @@
+{
+  "modmenu.nameTranslation.cbc_stratagems": "CBC Stratagems",
+  "itemGroup.cbc_stratagems": "CBC Stratagems",
+  "item.cbc_stratagems.stratagem_device": "Stratagem Device",
+  "item.cbc_stratagems.stratagem_license": "Stratagem License",
+  "entity.cbc_stratagems.stratagem_beacon": "Stratagem Beacon",
+  "entity.cbc_stratagems.stratagem_marker": "Stratagem Marker",
+  "key.categories.cbc_stratagems": "CBC Stratagems",
+  "key.cbc_stratagems.open_stratagem_panel": "Open Stratagem Panel",
+  "subtitles.cbc_stratagems.ui_open": "Stratagem panel opens",
+  "subtitles.cbc_stratagems.ui_close": "Stratagem panel closes",
+  "subtitles.cbc_stratagems.input": "Stratagem input",
+  "subtitles.cbc_stratagems.input_failed": "Stratagem input failed",
+  "subtitles.cbc_stratagems.input_complete": "Stratagem input complete",
+  "subtitles.cbc_stratagems.beacon_throw": "Stratagem beacon thrown",
+  "subtitles.cbc_stratagems.beacon_land": "Stratagem beacon lands",
+  "subtitles.cbc_stratagems.strike_denied": "Stratagem strike denied",
+  "subtitles.cbc_stratagems.strike_start": "Stratagem strike starts"
+}

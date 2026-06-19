@@ -1,4 +1,5 @@
 .external/
+.DS_Store
 
 .gradle/
 build/

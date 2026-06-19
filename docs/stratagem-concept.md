@@ -1,4 +1,4 @@
-# CBC-Stratgems 玩法设想
+# CBC-Stratagems 玩法设想
 
 ## 项目目标
 

@@ -1,0 +1,19 @@
+{
+  "modmenu.nameTranslation.cbc_stratagems": "CBC 战备",
+  "itemGroup.cbc_stratagems": "CBC 战备",
+  "item.cbc_stratagems.stratagem_device": "战略配备呼叫装置",
+  "item.cbc_stratagems.stratagem_license": "战略配备许可证",
+  "entity.cbc_stratagems.stratagem_beacon": "战略配备信标",
+  "entity.cbc_stratagems.stratagem_marker": "战略配备标记",
+  "key.categories.cbc_stratagems": "CBC 战备",
+  "key.cbc_stratagems.open_stratagem_panel": "打开战备面板",
+  "subtitles.cbc_stratagems.ui_open": "战备面板打开",
+  "subtitles.cbc_stratagems.ui_close": "战备面板关闭",
+  "subtitles.cbc_stratagems.input": "战备输入",
+  "subtitles.cbc_stratagems.input_failed": "战备输入失败",
+  "subtitles.cbc_stratagems.input_complete": "战备输入完成",
+  "subtitles.cbc_stratagems.beacon_throw": "战备信标投出",
+  "subtitles.cbc_stratagems.beacon_land": "战备信标落地",
+  "subtitles.cbc_stratagems.strike_denied": "战备打击被拒绝",
+  "subtitles.cbc_stratagems.strike_start": "战备打击开始"
+}
