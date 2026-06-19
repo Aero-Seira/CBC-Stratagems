@@ -8,6 +8,7 @@ import com.aeroseira.cbcstratagems.registry.ModEntityTypes;
 import com.aeroseira.cbcstratagems.registry.ModItems;
 import com.aeroseira.cbcstratagems.registry.ModPackets;
 import com.aeroseira.cbcstratagems.registry.ModSoundEvents;
+import com.aeroseira.cbcstratagems.stratagem.StratagemCommands;
 import com.aeroseira.cbcstratagems.stratagem.StratagemReloadListener;
 import com.aeroseira.cbcstratagems.stratagem.input.StratagemInputManager;
 import com.mojang.logging.LogUtils;
@@ -32,6 +33,7 @@ public final class CBCStratagems {
         ModSoundEvents.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
         ModPackets.register(modEventBus);
+        StratagemCommands.register();
         StratagemReloadListener.register();
         PlayerStratagemDataManager.register();
         StratagemInputManager.register();

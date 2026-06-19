@@ -7,6 +7,7 @@ import com.aeroseira.cbcstratagems.network.ServerboundStratagemInputPacket;
 import com.aeroseira.cbcstratagems.registry.ModDataComponents;
 import com.aeroseira.cbcstratagems.registry.ModItems;
 import com.aeroseira.cbcstratagems.stratagem.StratagemCommand;
+import com.aeroseira.cbcstratagems.stratagem.input.StratagemInputFeedback;
 import com.aeroseira.cbcstratagems.stratagem.input.StratagemInputStatus;
 import java.util.List;
 import net.minecraft.client.Minecraft;
@@ -26,6 +27,7 @@ import org.lwjgl.glfw.GLFW;
 public final class StratagemInputClient {
     private static boolean controlActive;
     private static boolean completedUntilRelease;
+    private static boolean inputBlockedUntilRelease;
     private static boolean rightMouseHeld;
     private static int activeSlot = -1;
     private static boolean rawUpDown;
@@ -72,25 +74,42 @@ public final class StratagemInputClient {
         if (!useHeld) {
             closeInput(true);
             completedUntilRelease = false;
+            inputBlockedUntilRelease = false;
             return;
         }
 
         boolean callerDeviceHeld = isCallerDeviceHeld(minecraft);
         boolean selectedSlotStillActive = activeSlot < 0 || minecraft.player != null && minecraft.player.getInventory().selected == activeSlot;
-        if ((controlActive || StratagemClientState.isInputActive()) && (!callerDeviceHeld || !selectedSlotStillActive || minecraft.screen != null)) {
+        if (StratagemClientState.shouldRenderInputOverlay() && (!selectedSlotStillActive || minecraft.screen != null)) {
             closeInput(true);
             return;
         }
 
         if (StratagemClientState.inputStatus() == StratagemInputStatus.COMPLETE) {
             completedUntilRelease = true;
-            closeInput(false);
+            if (!isStratagemDeviceHeld(minecraft)) {
+                closeInput(false);
+            } else {
+                suspendInputControl();
+            }
+            return;
+        }
+
+        if ((controlActive || StratagemClientState.isInputActive()) && selectedSlotStillActive && isBeaconDeviceHeld(minecraft)) {
+            completedUntilRelease = true;
+            suspendInputControl();
+            return;
+        }
+        if ((controlActive || StratagemClientState.isInputActive()) && (!callerDeviceHeld || !selectedSlotStillActive || minecraft.screen != null)) {
+            closeInput(true);
+            return;
         }
 
         boolean shouldBeOpen = minecraft.player != null
                 && minecraft.screen == null
                 && callerDeviceHeld
-                && !completedUntilRelease;
+                && !completedUntilRelease
+                && !inputBlockedUntilRelease;
 
         if (shouldBeOpen && !controlActive) {
             controlActive = true;
@@ -113,7 +132,20 @@ public final class StratagemInputClient {
         }
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || minecraft.screen != null || !isCallerDeviceHeld(minecraft)) {
+        if (minecraft.player == null || minecraft.screen != null) {
+            return;
+        }
+
+        if (isBeaconDeviceHeld(minecraft)
+                && !completedUntilRelease
+                && !inputBlockedUntilRelease
+                && !controlActive
+                && !StratagemClientState.isInputActive()) {
+            inputBlockedUntilRelease = true;
+            return;
+        }
+
+        if (!shouldCancelUseItem(minecraft)) {
             return;
         }
 
@@ -168,6 +200,7 @@ public final class StratagemInputClient {
     public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         closeInput(false);
         completedUntilRelease = false;
+        inputBlockedUntilRelease = false;
         rightMouseHeld = false;
         wasUpDown = false;
         wasDownDown = false;
@@ -184,8 +217,13 @@ public final class StratagemInputClient {
         StratagemClientState.clearInputState();
     }
 
+    private static void suspendInputControl() {
+        controlActive = false;
+    }
+
     private static void sendOnRisingEdge(StratagemCommand command, boolean isDown, boolean wasDown) {
         if (isDown && !wasDown) {
+            StratagemClientState.clearTransientInputFeedback();
             PacketDistributor.sendToServer(new ServerboundStratagemInputPacket(command));
         }
     }
@@ -263,7 +301,33 @@ public final class StratagemInputClient {
         if (minecraft.player.getOffhandItem().is(ModItems.STRATAGEM_LICENSE.get())) {
             return false;
         }
-        return mainHand.getOrDefault(ModDataComponents.DEVICE_MODE, StratagemDeviceMode.CALLER) == StratagemDeviceMode.CALLER;
+        return mainHand.getOrDefault(ModDataComponents.DEVICE_MODE, StratagemDeviceMode.CALLER) == StratagemDeviceMode.CALLER
+                && !mainHand.has(ModDataComponents.SELECTED_STRATAGEM);
+    }
+
+    private static boolean isBeaconDeviceHeld(Minecraft minecraft) {
+        if (minecraft.player == null) {
+            return false;
+        }
+        ItemStack mainHand = minecraft.player.getMainHandItem();
+        return mainHand.is(ModItems.STRATAGEM_DEVICE.get())
+                && mainHand.getOrDefault(ModDataComponents.DEVICE_MODE, StratagemDeviceMode.CALLER) == StratagemDeviceMode.BEACON;
+    }
+
+    private static boolean isStratagemDeviceHeld(Minecraft minecraft) {
+        return minecraft.player != null && minecraft.player.getMainHandItem().is(ModItems.STRATAGEM_DEVICE.get());
+    }
+
+    private static boolean shouldCancelUseItem(Minecraft minecraft) {
+        ItemStack mainHand = minecraft.player.getMainHandItem();
+        if (!mainHand.is(ModItems.STRATAGEM_DEVICE.get())) {
+            return false;
+        }
+        if (minecraft.player.getOffhandItem().is(ModItems.STRATAGEM_LICENSE.get())) {
+            return completedUntilRelease || inputBlockedUntilRelease || StratagemClientState.isInputActive();
+        }
+        StratagemDeviceMode mode = mainHand.getOrDefault(ModDataComponents.DEVICE_MODE, StratagemDeviceMode.CALLER);
+        return mode == StratagemDeviceMode.CALLER || completedUntilRelease || inputBlockedUntilRelease || StratagemClientState.isInputActive();
     }
 
     private static boolean isUseHeld(Minecraft minecraft) {
@@ -293,6 +357,12 @@ public final class StratagemInputClient {
     }
 
     private static int statusColor() {
+        if (StratagemClientState.inputFeedback() == StratagemInputFeedback.ERROR) {
+            return 0xFF5555;
+        }
+        if (StratagemClientState.inputFeedback() == StratagemInputFeedback.COOLDOWN) {
+            return 0xFFFF55;
+        }
         return switch (StratagemClientState.inputStatus()) {
             case COMPLETE -> 0x55FF55;
             case FAILED -> 0xFF5555;

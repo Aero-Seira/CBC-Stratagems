@@ -4,6 +4,7 @@ import com.aeroseira.cbcstratagems.network.ClientboundStratagemInputStatePacket;
 import com.aeroseira.cbcstratagems.player.PlayerStratagemCooldown;
 import com.aeroseira.cbcstratagems.stratagem.StratagemCommand;
 import com.aeroseira.cbcstratagems.stratagem.StratagemDefinitionSummary;
+import com.aeroseira.cbcstratagems.stratagem.input.StratagemInputFeedback;
 import com.aeroseira.cbcstratagems.stratagem.input.StratagemInputStatus;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public final class StratagemClientState {
     private static final int INPUT_FEEDBACK_TICKS = 40;
+    private static final int INPUT_MESSAGE_TICKS = 30;
 
     private static volatile Map<ResourceLocation, StratagemDefinitionSummary> definitions = Map.of();
     private static volatile Set<ResourceLocation> unlockedStratagems = Set.of();
@@ -26,7 +28,9 @@ public final class StratagemClientState {
     private static volatile List<StratagemCommand> currentInput = List.of();
     private static volatile Optional<ResourceLocation> selectedStratagem = Optional.empty();
     private static volatile Component inputMessage = Component.empty();
+    private static volatile StratagemInputFeedback inputFeedback = StratagemInputFeedback.NONE;
     private static int inputFeedbackTicks;
+    private static int inputMessageTicks;
 
     private StratagemClientState() {
     }
@@ -59,8 +63,12 @@ public final class StratagemClientState {
         currentInput = List.copyOf(packet.input());
         selectedStratagem = packet.selectedStratagem();
         inputMessage = packet.message();
+        inputFeedback = packet.feedback();
         inputFeedbackTicks = packet.status() == StratagemInputStatus.FAILED || packet.status() == StratagemInputStatus.COMPLETE
                 ? INPUT_FEEDBACK_TICKS
+                : 0;
+        inputMessageTicks = packet.status() == StratagemInputStatus.ACTIVE && packet.feedback() != StratagemInputFeedback.NONE
+                ? INPUT_MESSAGE_TICKS
                 : 0;
     }
 
@@ -69,7 +77,9 @@ public final class StratagemClientState {
         currentInput = List.of();
         selectedStratagem = Optional.empty();
         inputMessage = Component.empty();
+        inputFeedback = StratagemInputFeedback.NONE;
         inputFeedbackTicks = 0;
+        inputMessageTicks = 0;
     }
 
     public static void clearInputState() {
@@ -77,13 +87,29 @@ public final class StratagemClientState {
         currentInput = List.of();
         selectedStratagem = Optional.empty();
         inputMessage = Component.empty();
+        inputFeedback = StratagemInputFeedback.NONE;
         inputFeedbackTicks = 0;
+        inputMessageTicks = 0;
     }
 
     public static void tickInputFeedback() {
         if (inputFeedbackTicks > 0) {
             inputFeedbackTicks--;
         }
+        if (inputMessageTicks > 0 && --inputMessageTicks == 0 && inputStatus == StratagemInputStatus.ACTIVE) {
+            inputMessage = Component.empty();
+            inputFeedback = StratagemInputFeedback.NONE;
+            currentInput = List.of();
+        }
+    }
+
+    public static void clearTransientInputFeedback() {
+        if (inputFeedback != StratagemInputFeedback.NONE) {
+            currentInput = List.of();
+        }
+        inputMessage = Component.empty();
+        inputFeedback = StratagemInputFeedback.NONE;
+        inputMessageTicks = 0;
     }
 
     public static Collection<StratagemDefinitionSummary> definitions() {
@@ -107,7 +133,7 @@ public final class StratagemClientState {
     }
 
     public static boolean shouldRenderInputOverlay() {
-        return isInputActive() || inputFeedbackTicks > 0;
+        return isInputActive() || inputStatus == StratagemInputStatus.COMPLETE || inputFeedbackTicks > 0;
     }
 
     public static StratagemInputStatus inputStatus() {
@@ -124,5 +150,9 @@ public final class StratagemClientState {
 
     public static Component inputMessage() {
         return inputMessage;
+    }
+
+    public static StratagemInputFeedback inputFeedback() {
+        return inputFeedback;
     }
 }

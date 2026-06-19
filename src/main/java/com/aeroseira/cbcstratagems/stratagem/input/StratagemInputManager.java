@@ -71,7 +71,7 @@ public final class StratagemInputManager {
         List<StratagemCommand> input = session.input();
         List<StratagemDefinition> candidates = findCandidates(input);
         if (candidates.isEmpty()) {
-            fail(player, input, Component.translatable("message.cbc_stratagems.input.no_match"));
+            resetInput(player, session, input, Component.translatable("message.cbc_stratagems.input.no_match"), StratagemInputFeedback.ERROR);
             return;
         }
 
@@ -79,13 +79,19 @@ public final class StratagemInputManager {
                 .filter(definition -> definition.command().size() == input.size())
                 .findFirst();
         if (complete.isPresent()) {
-            complete(player, deviceStack, input, complete.get());
+            complete(player, deviceStack, session, input, complete.get());
         } else {
             sync(player, StratagemInputStatus.ACTIVE, input, Optional.empty(), Component.empty());
         }
     }
 
-    private static void complete(ServerPlayer player, ItemStack deviceStack, List<StratagemCommand> input, StratagemDefinition definition) {
+    private static void complete(
+            ServerPlayer player,
+            ItemStack deviceStack,
+            PlayerStratagemInputSession session,
+            List<StratagemCommand> input,
+            StratagemDefinition definition
+    ) {
         ResourceLocation stratagemId = definition.id();
         if (!PlayerStratagemDataManager.isUnlocked(player, stratagemId)) {
             fail(player, input, Component.translatable("message.cbc_stratagems.input.locked", definition.name()));
@@ -95,7 +101,13 @@ public final class StratagemInputManager {
         long gameTime = player.serverLevel().getGameTime();
         long cooldownEnd = PlayerStratagemDataManager.getCooldownEnd(player, stratagemId);
         if (cooldownEnd > gameTime) {
-            fail(player, input, Component.translatable("message.cbc_stratagems.input.cooldown", (cooldownEnd - gameTime + 19L) / 20L));
+            resetInput(
+                    player,
+                    session,
+                    input,
+                    Component.translatable("message.cbc_stratagems.input.cooldown", (cooldownEnd - gameTime + 19L) / 20L),
+                    StratagemInputFeedback.COOLDOWN
+            );
             return;
         }
 
@@ -110,6 +122,18 @@ public final class StratagemInputManager {
         SESSIONS.remove(player.getUUID());
         player.stopUsingItem();
         sync(player, StratagemInputStatus.FAILED, input, Optional.empty(), message);
+        player.displayClientMessage(message, true);
+    }
+
+    private static void resetInput(
+            ServerPlayer player,
+            PlayerStratagemInputSession session,
+            List<StratagemCommand> displayInput,
+            Component message,
+            StratagemInputFeedback feedback
+    ) {
+        session.clear();
+        sync(player, StratagemInputStatus.ACTIVE, displayInput, Optional.empty(), message, feedback);
         player.displayClientMessage(message, true);
     }
 
@@ -152,7 +176,18 @@ public final class StratagemInputManager {
             Optional<ResourceLocation> selectedStratagem,
             Component message
     ) {
-        PacketDistributor.sendToPlayer(player, new ClientboundStratagemInputStatePacket(status, input, selectedStratagem, message));
+        sync(player, status, input, selectedStratagem, message, StratagemInputFeedback.NONE);
+    }
+
+    private static void sync(
+            ServerPlayer player,
+            StratagemInputStatus status,
+            List<StratagemCommand> input,
+            Optional<ResourceLocation> selectedStratagem,
+            Component message,
+            StratagemInputFeedback feedback
+    ) {
+        PacketDistributor.sendToPlayer(player, new ClientboundStratagemInputStatePacket(status, input, selectedStratagem, message, feedback));
     }
 
     private static void onServerTick(ServerTickEvent.Post event) {

@@ -1,0 +1,31 @@
+{
+  "name": {
+    "translate": "stratagem.cbc_stratagems.debug_test"
+  },
+  "icon": "cbc_stratagems:textures/gui/stratagem/icon_placeholder.png",
+  "command": [
+    "up",
+    "down",
+    "right",
+    "left",
+    "down"
+  ],
+  "cooldown_ticks": 200,
+  "countdown_ticks": 60,
+  "artillery": [
+    {
+      "projectile": {
+        "id": "createbigcannons:he_shell",
+        "count": 1
+      },
+      "count": 1,
+      "interval_ticks": 0,
+      "spawn_height": 96,
+      "spawn_scatter": 0.0,
+      "target_scatter": 0.0,
+      "power": 4.0,
+      "spread": 0.0,
+      "max_obstruction_blocks": 8
+    }
+  ]
+}

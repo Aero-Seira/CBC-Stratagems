@@ -14,6 +14,10 @@ final class PlayerStratagemInputSession {
         input.add(command);
     }
 
+    void clear() {
+        input.clear();
+    }
+
     List<StratagemCommand> input() {
         return List.copyOf(input);
     }

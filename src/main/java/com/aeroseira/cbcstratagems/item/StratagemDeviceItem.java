@@ -1,12 +1,15 @@
 package com.aeroseira.cbcstratagems.item;
 
+import com.aeroseira.cbcstratagems.entity.StratagemBeaconProjectile;
 import com.aeroseira.cbcstratagems.player.PlayerStratagemDataManager;
 import com.aeroseira.cbcstratagems.registry.ModDataComponents;
 import com.aeroseira.cbcstratagems.registry.ModItems;
+import com.aeroseira.cbcstratagems.registry.ModSoundEvents;
 import com.aeroseira.cbcstratagems.stratagem.StratagemRegistry;
 import com.aeroseira.cbcstratagems.stratagem.input.StratagemInputManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -61,8 +64,8 @@ public class StratagemDeviceItem extends Item {
     private static InteractionResultHolder<ItemStack> useDevice(Level level, Player player, InteractionHand usedHand, ItemStack deviceStack) {
         StratagemDeviceMode mode = deviceStack.getOrDefault(ModDataComponents.DEVICE_MODE, StratagemDeviceMode.CALLER);
         if (mode == StratagemDeviceMode.BEACON) {
-            if (!level.isClientSide()) {
-                player.displayClientMessage(Component.translatable("message.cbc_stratagems.beacon.not_implemented"), true);
+            if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
+                throwBeacon(serverPlayer, deviceStack);
             }
             return InteractionResultHolder.sidedSuccess(deviceStack, level.isClientSide());
         }
@@ -71,6 +74,41 @@ public class StratagemDeviceItem extends Item {
             StratagemInputManager.start(serverPlayer);
         }
         return InteractionResultHolder.consume(deviceStack);
+    }
+
+    private static void throwBeacon(ServerPlayer player, ItemStack deviceStack) {
+        ResourceLocation stratagemId = deviceStack.get(ModDataComponents.SELECTED_STRATAGEM);
+        if (stratagemId == null) {
+            resetDevice(deviceStack);
+            player.displayClientMessage(Component.translatable("message.cbc_stratagems.beacon.missing_stratagem"), true);
+            return;
+        }
+
+        StratagemRegistry.get(stratagemId).ifPresentOrElse(definition -> {
+            if (!isOpenSky(player)) {
+                player.displayClientMessage(Component.translatable("message.cbc_stratagems.input.no_sky"), true);
+                return;
+            }
+
+            StratagemBeaconProjectile beacon = new StratagemBeaconProjectile(player.level(), player, stratagemId);
+            beacon.setItem(new ItemStack(ModItems.STRATAGEM_DEVICE.get()));
+            beacon.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 1.5F, 1.0F);
+            player.level().addFreshEntity(beacon);
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(), ModSoundEvents.BEACON_THROW.get(), SoundSource.PLAYERS, 0.8F, 1.0F);
+            resetDevice(deviceStack);
+        }, () -> {
+            resetDevice(deviceStack);
+            player.displayClientMessage(Component.translatable("message.cbc_stratagems.beacon.unknown_stratagem", stratagemId.toString()), true);
+        });
+    }
+
+    private static void resetDevice(ItemStack deviceStack) {
+        deviceStack.set(ModDataComponents.DEVICE_MODE, StratagemDeviceMode.CALLER);
+        deviceStack.remove(ModDataComponents.SELECTED_STRATAGEM);
+    }
+
+    private static boolean isOpenSky(ServerPlayer player) {
+        return !player.serverLevel().dimensionType().hasCeiling() && player.serverLevel().canSeeSky(player.blockPosition());
     }
 
     private static void unlockFromLicense(ServerPlayer player, ItemStack licenseStack) {

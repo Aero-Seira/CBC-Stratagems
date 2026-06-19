@@ -2,6 +2,7 @@ package com.aeroseira.cbcstratagems.network;
 
 import com.aeroseira.cbcstratagems.CBCStratagems;
 import com.aeroseira.cbcstratagems.stratagem.StratagemCommand;
+import com.aeroseira.cbcstratagems.stratagem.input.StratagemInputFeedback;
 import com.aeroseira.cbcstratagems.stratagem.input.StratagemInputStatus;
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +18,8 @@ public record ClientboundStratagemInputStatePacket(
         StratagemInputStatus status,
         List<StratagemCommand> input,
         Optional<ResourceLocation> selectedStratagem,
-        Component message
+        Component message,
+        StratagemInputFeedback feedback
 ) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<ClientboundStratagemInputStatePacket> TYPE =
             new CustomPacketPayload.Type<>(CBCStratagems.id("stratagem_input_state"));
@@ -31,11 +33,22 @@ public record ClientboundStratagemInputStatePacket(
             ClientboundStratagemInputStatePacket::selectedStratagem,
             ComponentSerialization.STREAM_CODEC,
             ClientboundStratagemInputStatePacket::message,
+            StratagemInputFeedback.STREAM_CODEC,
+            ClientboundStratagemInputStatePacket::feedback,
             ClientboundStratagemInputStatePacket::new
     );
 
     public ClientboundStratagemInputStatePacket {
         input = List.copyOf(input);
+    }
+
+    public ClientboundStratagemInputStatePacket(
+            StratagemInputStatus status,
+            List<StratagemCommand> input,
+            Optional<ResourceLocation> selectedStratagem,
+            Component message
+    ) {
+        this(status, input, selectedStratagem, message, StratagemInputFeedback.NONE);
     }
 
     @Override
