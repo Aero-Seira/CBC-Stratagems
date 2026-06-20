@@ -9,4 +9,5 @@ run/
 
 .eclipse/
 .idea/
+./vscode/
 *.iml
