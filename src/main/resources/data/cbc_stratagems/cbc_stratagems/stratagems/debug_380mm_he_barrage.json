@@ -1,22 +1,26 @@
 {
   "name": {
-    "translate": "stratagem.cbc_stratagems.debug_test"
+    "translate": "stratagem.cbc_stratagems.debug_380mm_he_barrage"
   },
-  "icon": "cbc_stratagems:textures/icon/orbital_precision_strike.png",
+  "icon": "cbc_stratagems:textures/icon/orbital_380mm_he_barrage.png",
   "command": [
     "right",
-    "right",
-    "up"
+    "down",
+    "up",
+    "up",
+    "left",
+    "down",
+    "down"
   ],
   "cooldown_ticks": 200,
-  "countdown_ticks": 60,
+  "countdown_ticks": 160,
   "fire_plan": {
-    "type": "instant",
+    "type": "fire_grid",
     "phases": [
       {
         "delay_ticks": 0,
-        "iterations": 1,
-        "iteration_interval_ticks": 0,
+        "iterations": 6,
+        "iteration_interval_ticks": 100,
         "elements": [
           {
             "projectile_stack": {
@@ -26,10 +30,11 @@
                 "id": "createbigcannons:impact_fuze"
               }
             },
-            "shots": 1,
-            "shot_interval_ticks": 0,
+            "shots": 3,
+            "shot_interval_ticks": 20,
             "targeting": {
-              "type": "precise"
+              "type": "random_area",
+              "radius": 36.0
             },
             "trajectory": {
               "mode": "auto",

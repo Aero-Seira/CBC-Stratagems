@@ -94,7 +94,7 @@ public final class StratagemMarkerOverlay {
     ) {
         StratagemDefinitionSummary summary = marker.stratagemId() == null ? null : StratagemClientState.get(marker.stratagemId()).orElse(null);
         Component name = markerName(marker, summary);
-        Component countdown = countdownText(marker.remainingTicks());
+        Component countdown = countdownText(marker.remainingTicks(), marker.activeRemainingTicks());
         ResourceLocation icon = summary == null ? layout.iconPlaceholder() : summary.icon();
 
         ScreenPoint screenPoint = projectBeamPoint(minecraft, graphics, marker, layout);
@@ -176,8 +176,11 @@ public final class StratagemMarkerOverlay {
                 : Component.literal(stratagemId.toString());
     }
 
-    private static Component countdownText(int remainingTicks) {
+    private static Component countdownText(int remainingTicks, int activeRemainingTicks) {
         if (remainingTicks <= 0) {
+            if (activeRemainingTicks > 0) {
+                return Component.translatable("overlay.cbc_stratagems.marker.active", formatClock(activeRemainingTicks));
+            }
             return Component.translatable("overlay.cbc_stratagems.marker.impact");
         }
 

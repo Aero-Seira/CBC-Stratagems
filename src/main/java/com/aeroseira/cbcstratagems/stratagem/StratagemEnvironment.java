@@ -35,30 +35,37 @@ public final class StratagemEnvironment {
         int worstSpan = 0;
         int strictestLimit = Integer.MAX_VALUE;
 
-        for (StratagemArtilleryEntry entry : definition.artillery()) {
-            FirePath path = resolveFirePath(level, target, entry);
-            int span = path.obstructionBlocks();
-            worstSpan = Math.max(worstSpan, span);
-            strictestLimit = Math.min(strictestLimit, entry.maxObstructionBlocks());
-            if (span > entry.maxObstructionBlocks()) {
-                return new ObstructionResult(false, span, entry.maxObstructionBlocks());
+        for (StratagemFirePhase phase : definition.firePlan().phases()) {
+            for (StratagemFireEntry entry : phase.entries()) {
+                FirePath path = resolveFirePath(level, target, entry);
+                int span = path.obstructionBlocks();
+                int limit = entry.trajectory().maxObstructionBlocks();
+                worstSpan = Math.max(worstSpan, span);
+                strictestLimit = Math.min(strictestLimit, limit);
+                if (span > limit) {
+                    return new ObstructionResult(false, span, limit);
+                }
             }
         }
 
         return new ObstructionResult(true, worstSpan, strictestLimit == Integer.MAX_VALUE ? 0 : strictestLimit);
     }
 
-    public static FirePath resolveFirePath(ServerLevel level, Vec3 target, StratagemArtilleryEntry entry) {
-        if (entry.trajectoryMode() == StratagemTrajectoryMode.FIXED) {
-            return firePath(level, target, entry, entry.fixedSpawnOffset());
+    public static FirePath resolveFirePath(ServerLevel level, Vec3 target, StratagemFireEntry entry) {
+        return resolveFirePath(level, target, entry.trajectory(), entry.launch());
+    }
+
+    private static FirePath resolveFirePath(ServerLevel level, Vec3 target, StratagemTrajectorySpec trajectory, StratagemLaunchSpec launch) {
+        if (trajectory.mode() == StratagemTrajectoryMode.FIXED) {
+            return firePath(level, target, trajectory.fixedSpawnOffset(), launch.spawnHeight());
         }
 
-        double maxByElevation = entry.spawnHeight() / Math.tan(Math.toRadians(entry.autoMinElevationDegrees()));
-        double searchRadius = Math.min(entry.autoSearchRadius(), Math.max(0.0D, maxByElevation));
-        int bearingSteps = Math.max(1, entry.autoBearingSteps());
-        int radiusSteps = Math.max(1, entry.autoRadiusSteps());
+        double maxByElevation = launch.spawnHeight() / Math.tan(Math.toRadians(trajectory.minElevationDegrees()));
+        double searchRadius = Math.min(trajectory.searchRadius(), Math.max(0.0D, maxByElevation));
+        int bearingSteps = Math.max(1, trajectory.bearingSteps());
+        int radiusSteps = Math.max(1, trajectory.radiusSteps());
         if (searchRadius <= 0.0D) {
-            return firePath(level, target, entry, Vec3.ZERO);
+            return firePath(level, target, Vec3.ZERO, launch.spawnHeight());
         }
 
         FirePath best = null;
@@ -67,7 +74,7 @@ public final class StratagemEnvironment {
             for (int bearingIndex = 0; bearingIndex < bearingSteps; bearingIndex++) {
                 double radians = Math.PI * 2.0D * bearingIndex / bearingSteps;
                 Vec3 offset = new Vec3(Math.sin(radians) * radius, 0.0D, -Math.cos(radians) * radius);
-                FirePath candidate = firePath(level, target, entry, offset);
+                FirePath candidate = firePath(level, target, offset, launch.spawnHeight());
                 if (best == null || isBetterPath(candidate, best)) {
                     best = candidate;
                 }
@@ -77,8 +84,8 @@ public final class StratagemEnvironment {
         return best;
     }
 
-    private static FirePath firePath(ServerLevel level, Vec3 target, StratagemArtilleryEntry entry, Vec3 horizontalOffset) {
-        Vec3 firePoint = target.add(horizontalOffset).add(0.0D, entry.spawnHeight(), 0.0D);
+    private static FirePath firePath(ServerLevel level, Vec3 target, Vec3 horizontalOffset, int spawnHeight) {
+        Vec3 firePoint = target.add(horizontalOffset).add(0.0D, spawnHeight, 0.0D);
         int span = blockingBlockSpan(level, target.add(0.0D, 0.25D, 0.0D), firePoint);
         return new FirePath(horizontalOffset, span);
     }
