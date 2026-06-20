@@ -5,6 +5,7 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
 public final class StratagemEnvironment {
@@ -17,13 +18,26 @@ public final class StratagemEnvironment {
         return !level.dimensionType().hasCeiling() && level.canSeeSky(pos);
     }
 
+    public static boolean blocksCallerInput(ServerLevel level, BlockPos pos) {
+        return level.dimensionType().hasCeiling() || isBelowSurface(level, pos);
+    }
+
+    public static boolean allowsExternalStrike(ServerLevel level) {
+        return !level.dimensionType().hasCeiling();
+    }
+
+    public static boolean isBelowSurface(ServerLevel level, BlockPos pos) {
+        int surfaceY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ());
+        return !level.canSeeSky(pos) && surfaceY - pos.getY() > 8;
+    }
+
     public static ObstructionResult validateObstructions(ServerLevel level, Vec3 target, StratagemDefinition definition) {
         int worstSpan = 0;
         int strictestLimit = Integer.MAX_VALUE;
 
         for (StratagemArtilleryEntry entry : definition.artillery()) {
-            Vec3 firePoint = target.add(0.0D, entry.spawnHeight(), 0.0D);
-            int span = blockingBlockSpan(level, target.add(0.0D, 0.25D, 0.0D), firePoint);
+            FirePath path = resolveFirePath(level, target, entry);
+            int span = path.obstructionBlocks();
             worstSpan = Math.max(worstSpan, span);
             strictestLimit = Math.min(strictestLimit, entry.maxObstructionBlocks());
             if (span > entry.maxObstructionBlocks()) {
@@ -32,6 +46,48 @@ public final class StratagemEnvironment {
         }
 
         return new ObstructionResult(true, worstSpan, strictestLimit == Integer.MAX_VALUE ? 0 : strictestLimit);
+    }
+
+    public static FirePath resolveFirePath(ServerLevel level, Vec3 target, StratagemArtilleryEntry entry) {
+        if (entry.trajectoryMode() == StratagemTrajectoryMode.FIXED) {
+            return firePath(level, target, entry, entry.fixedSpawnOffset());
+        }
+
+        double maxByElevation = entry.spawnHeight() / Math.tan(Math.toRadians(entry.autoMinElevationDegrees()));
+        double searchRadius = Math.min(entry.autoSearchRadius(), Math.max(0.0D, maxByElevation));
+        int bearingSteps = Math.max(1, entry.autoBearingSteps());
+        int radiusSteps = Math.max(1, entry.autoRadiusSteps());
+        if (searchRadius <= 0.0D) {
+            return firePath(level, target, entry, Vec3.ZERO);
+        }
+
+        FirePath best = null;
+        for (int radiusIndex = 1; radiusIndex <= radiusSteps; radiusIndex++) {
+            double radius = searchRadius * radiusIndex / radiusSteps;
+            for (int bearingIndex = 0; bearingIndex < bearingSteps; bearingIndex++) {
+                double radians = Math.PI * 2.0D * bearingIndex / bearingSteps;
+                Vec3 offset = new Vec3(Math.sin(radians) * radius, 0.0D, -Math.cos(radians) * radius);
+                FirePath candidate = firePath(level, target, entry, offset);
+                if (best == null || isBetterPath(candidate, best)) {
+                    best = candidate;
+                }
+            }
+        }
+
+        return best;
+    }
+
+    private static FirePath firePath(ServerLevel level, Vec3 target, StratagemArtilleryEntry entry, Vec3 horizontalOffset) {
+        Vec3 firePoint = target.add(horizontalOffset).add(0.0D, entry.spawnHeight(), 0.0D);
+        int span = blockingBlockSpan(level, target.add(0.0D, 0.25D, 0.0D), firePoint);
+        return new FirePath(horizontalOffset, span);
+    }
+
+    private static boolean isBetterPath(FirePath candidate, FirePath current) {
+        if (candidate.obstructionBlocks() != current.obstructionBlocks()) {
+            return candidate.obstructionBlocks() < current.obstructionBlocks();
+        }
+        return candidate.horizontalOffset().lengthSqr() > current.horizontalOffset().lengthSqr();
     }
 
     private static int blockingBlockSpan(ServerLevel level, Vec3 from, Vec3 to) {
@@ -66,5 +122,8 @@ public final class StratagemEnvironment {
     }
 
     public record ObstructionResult(boolean clear, int obstructionBlocks, int maxObstructionBlocks) {
+    }
+
+    public record FirePath(Vec3 horizontalOffset, int obstructionBlocks) {
     }
 }

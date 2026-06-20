@@ -258,11 +258,18 @@ data/cbc_stratagems/cbc_stratagems/stratagems/debug_he.json
       "count": 4,
       "interval_ticks": 12,
       "spawn_height": 96,
+      "trajectory_mode": "auto",
+      "auto_search_radius": 56.0,
+      "auto_min_elevation_degrees": 30.0,
+      "auto_bearing_steps": 16,
+      "auto_radius_steps": 2,
+      "spawn_bearing_degrees": 0.0,
+      "spawn_distance": 0.0,
       "spawn_scatter": 18.0,
       "target_scatter": 9.0,
-      "power": 4.0,
+      "power": 8.0,
       "spread": 0.75,
-      "max_obstruction_blocks": 8
+      "max_obstruction_blocks": 16
     }
   ],
   "timeline": []
@@ -276,8 +283,11 @@ data/cbc_stratagems/cbc_stratagems/stratagems/debug_he.json
 - `cooldown_ticks >= 0`，`countdown_ticks >= 0`。
 - `count >= 1`，`interval_ticks >= 0`。
 - `spawn_height > 0`，`spawn_scatter >= 0`，`target_scatter >= 0`。
+- `trajectory_mode` 可为 `auto` 或 `fixed`，默认 `auto`。
+- `fixed` 模式使用 `spawn_distance >= 0` 和 `spawn_bearing_degrees`；方位为从北向顺时针的水平发射方位，`spawn_distance=0` 时保持垂直落弹。
+- `auto` 模式在 `auto_search_radius` 半径内按 `auto_bearing_steps` 和 `auto_radius_steps` 离散采样，忽略低于 `auto_min_elevation_degrees` 的候选路径，选择阻隔跨度最小的近似最优路径。
 - `power > 0`，`spread >= 0`。
-- `max_obstruction_blocks >= 0`，调试默认值为 `8`。
+- `max_obstruction_blocks >= 0`，默认值为 `16`。
 - `projectile.id` 必须能解析为 item；是否为 CBC `ProjectileBlock` 在发射时再次检查。
 - `timeline` 第一阶段可为空；第二阶段编辑器用于保存高级发射时间/位置编排。
 
@@ -698,6 +708,6 @@ SPAWN_FAILED
 - **同步风险**：输入 session、物品组件、玩家冷却、marker 倒计时都跨客户端/服务端。
 - **数据包风险**：战备定义 reload 后，客户端缓存和玩家冷却可能引用已删除 ID。
 - **渲染风险**：Beacon beam 和 billboard 依赖客户端渲染 API，版本升级容易变。
-- **玩法调参风险**：`max_obstruction_blocks=8` 和 `canSeeSky` 洞穴判定需要游戏内验证。
+- **玩法调参风险**：`max_obstruction_blocks=16` 和 `canSeeSky` 洞穴判定需要游戏内验证。
 - **输入优先级风险**：WASD 消费需要避免和原版移动、其他模组 key handling 产生冲突。
 - **编辑器风险**：CBC 炮弹属性 JSON 是全局属性模型，游戏内临时覆盖会影响兼容性，需要单独设计，不能直接假设可安全修改。

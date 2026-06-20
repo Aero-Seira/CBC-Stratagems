@@ -42,7 +42,7 @@ public final class StratagemInputManager {
             return false;
         }
 
-        boolean blocked = !StratagemEnvironment.hasOpenSky(player.serverLevel(), player.blockPosition());
+        boolean blocked = StratagemEnvironment.blocksCallerInput(player.serverLevel(), player.blockPosition());
         PlayerStratagemInputSession session = new PlayerStratagemInputSession(blocked);
         SESSIONS.put(player.getUUID(), session);
         syncInputState(player, session);
@@ -220,7 +220,7 @@ public final class StratagemInputManager {
     }
 
     private static void updateEnvironmentBlock(ServerPlayer player, PlayerStratagemInputSession session) {
-        boolean blocked = !StratagemEnvironment.hasOpenSky(player.serverLevel(), player.blockPosition());
+        boolean blocked = StratagemEnvironment.blocksCallerInput(player.serverLevel(), player.blockPosition());
         if (session.inputBlocked() == blocked) {
             return;
         }

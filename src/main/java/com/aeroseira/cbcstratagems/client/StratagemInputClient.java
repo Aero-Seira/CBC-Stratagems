@@ -16,6 +16,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -123,10 +124,10 @@ public final class StratagemInputClient {
         if (shouldBeOpen && !controlActive) {
             controlActive = true;
             activeSlot = minecraft.player.getInventory().selected;
-            if (hasLocalOpenSky(minecraft)) {
-                StratagemClientState.beginLocalInput();
-            } else {
+            if (isLocalCallerBlocked(minecraft)) {
                 StratagemClientState.beginLocalBlockedInput(Component.translatable("message.cbc_stratagems.input.no_sky"));
+            } else {
+                StratagemClientState.beginLocalInput();
             }
             PacketDistributor.sendToServer(new ServerboundStratagemInputControlPacket(true));
         } else if (!shouldBeOpen && controlActive) {
@@ -387,9 +388,21 @@ public final class StratagemInputClient {
         };
     }
 
-    private static boolean hasLocalOpenSky(Minecraft minecraft) {
-        return minecraft.player != null
-                && !minecraft.player.level().dimensionType().hasCeiling()
-                && minecraft.player.level().canSeeSky(minecraft.player.blockPosition());
+    private static boolean isLocalCallerBlocked(Minecraft minecraft) {
+        if (minecraft.player == null) {
+            return false;
+        }
+
+        if (minecraft.player.level().dimensionType().hasCeiling()) {
+            return true;
+        }
+
+        int surfaceY = minecraft.player.level().getHeight(
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                minecraft.player.blockPosition().getX(),
+                minecraft.player.blockPosition().getZ()
+        );
+        return !minecraft.player.level().canSeeSky(minecraft.player.blockPosition())
+                && surfaceY - minecraft.player.blockPosition().getY() > 8;
     }
 }

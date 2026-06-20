@@ -1,6 +1,7 @@
 package com.aeroseira.cbcstratagems;
 
 import com.aeroseira.cbcstratagems.client.StratagemInputClient;
+import com.aeroseira.cbcstratagems.client.StratagemMarkerOverlay;
 import com.aeroseira.cbcstratagems.client.StratagemMarkerRenderer;
 import com.aeroseira.cbcstratagems.registry.ModEntityTypes;
 import com.aeroseira.cbcstratagems.registry.ModKeyMappings;
@@ -22,6 +23,7 @@ public final class CBCStratagemsClient {
         NeoForge.EVENT_BUS.addListener(StratagemInputClient::onMouseButton);
         NeoForge.EVENT_BUS.addListener(StratagemInputClient::onMovementInput);
         NeoForge.EVENT_BUS.addListener(StratagemInputClient::onRenderGui);
+        NeoForge.EVENT_BUS.addListener(StratagemMarkerOverlay::onRenderGui);
         NeoForge.EVENT_BUS.addListener(StratagemInputClient::onLoggingOut);
     }
 

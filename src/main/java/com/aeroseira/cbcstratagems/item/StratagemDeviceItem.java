@@ -86,7 +86,7 @@ public class StratagemDeviceItem extends Item {
         }
 
         StratagemRegistry.get(stratagemId).ifPresentOrElse(definition -> {
-            if (!StratagemEnvironment.hasOpenSky(player.serverLevel(), player.blockPosition())) {
+            if (StratagemEnvironment.blocksCallerInput(player.serverLevel(), player.blockPosition())) {
                 player.displayClientMessage(Component.translatable("message.cbc_stratagems.input.no_sky"), true);
                 return;
             }

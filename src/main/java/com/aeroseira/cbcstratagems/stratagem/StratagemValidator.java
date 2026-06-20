@@ -86,6 +86,21 @@ public final class StratagemValidator {
         if (entry.maxObstructionBlocks() < 0) {
             errors.add(path + ".max_obstruction_blocks must be >= 0");
         }
+        if (entry.spawnDistance() < 0.0) {
+            errors.add(path + ".spawn_distance must be >= 0");
+        }
+        if (entry.autoSearchRadius() < 0.0) {
+            errors.add(path + ".auto_search_radius must be >= 0");
+        }
+        if (entry.autoMinElevationDegrees() <= 0.0 || entry.autoMinElevationDegrees() >= 90.0) {
+            errors.add(path + ".auto_min_elevation_degrees must be > 0 and < 90");
+        }
+        if (entry.autoBearingSteps() < 1) {
+            errors.add(path + ".auto_bearing_steps must be >= 1");
+        }
+        if (entry.autoRadiusSteps() < 1) {
+            errors.add(path + ".auto_radius_steps must be >= 1");
+        }
     }
 
     private static boolean isPrefix(List<StratagemCommand> possiblePrefix, List<StratagemCommand> command) {

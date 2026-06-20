@@ -28,6 +28,9 @@
 - `countdown_ticks`：信标落地到第一发开火的延迟。
 - `cooldown_ticks`：投掷后该战备进入冷却的时长。
 - `spawn_height`：相对目标点的生成高度。
+- `trajectory_mode`：发射路径策略，`auto` 自动寻路或 `fixed` 固定方位；默认 `auto`。
+- `spawn_bearing_degrees` / `spawn_distance`：`fixed` 模式水平发射方位；方位为从北向顺时针角度，距离为相对目标点的水平偏移。
+- `auto_search_radius` / `auto_min_elevation_degrees`：`auto` 模式在目标点半径内、最小仰角以上的弧面范围离散采样，选择阻隔最小的路径。
 - `spawn_scatter`：发射点水平随机偏移。
 - `target_scatter`：目标点水平随机偏移。
 - `power`：传给 `projectile.shoot(..., power, spread)` 的速度/装药标量。
@@ -44,7 +47,7 @@ CBC 自身继续决定这些内容：
 
 - 服务端在信标 marker 倒计时结束后执行发射。
 - 对每一发炮弹，先计算目标点：`markerPos + randomHorizontal(target_scatter)`。
-- 再计算生成点：`markerPos + randomHorizontal(spawn_scatter) + up(spawn_height)`，Y 值需要夹在世界 build height 内。
+- 再计算生成点：`markerPos + selectedTrajectoryOffset + randomHorizontal(spawn_scatter) + up(spawn_height)`，其中 `selectedTrajectoryOffset` 来自固定方位或自动寻路近似最优结果，Y 值需要夹在世界 build height 内。
 - 输入开始和投掷前都执行环境校验：如果玩家所在维度有天花板，或玩家当前位置不能看到天空，则直接提示无法使用，不生成 beacon，不进入冷却。
 - 信标落地后，按本次计算出的预设火力发射点到信标落点做阻隔统计；阻隔方块数超过 `max_obstruction_blocks` 时取消 marker，提示玩家“火力路径受阻”，不进入冷却。
 - 发射方向为 `targetPoint - spawnPoint` 的单位向量，传入 `projectile.shoot(dir.x, dir.y, dir.z, power, spread)`。
@@ -85,11 +88,18 @@ CBC 自身继续决定这些内容：
       "count": 4,
       "interval_ticks": 12,
       "spawn_height": 96,
+      "trajectory_mode": "auto",
+      "auto_search_radius": 56.0,
+      "auto_min_elevation_degrees": 30.0,
+      "auto_bearing_steps": 16,
+      "auto_radius_steps": 2,
+      "spawn_bearing_degrees": 0.0,
+      "spawn_distance": 0.0,
       "spawn_scatter": 18.0,
       "target_scatter": 9.0,
-      "power": 4.0,
+      "power": 8.0,
       "spread": 0.75,
-      "max_obstruction_blocks": 8
+      "max_obstruction_blocks": 16
     }
   ]
 }
@@ -319,7 +329,7 @@ Marker entity 需要同步：
 
 ### 需要游戏内验证
 
-- `max_obstruction_blocks` 先用调试默认值 `8`，后续按炮弹从高处落下的实际体验调参。
+- `max_obstruction_blocks` 先用调试默认值 `16`，后续按炮弹从高处落下的实际体验调参。
 - 阻隔统计先只计算实心阻挡方块，是否忽略树叶、草、液体等非完整阻挡方块需要实测。
 - 环境校验先使用“维度有天花板或 `!level.canSeeSky(player.blockPosition())`”判定洞穴/地狱不可用；该规则会把室内、树下和玩家头顶有方块的情况都视为不可用，需要实测确认是否过严。
 
