@@ -3,6 +3,7 @@ package com.aeroseira.cbcstratagems.entity;
 import com.aeroseira.cbcstratagems.player.PlayerStratagemDataManager;
 import com.aeroseira.cbcstratagems.registry.ModSoundEvents;
 import com.aeroseira.cbcstratagems.stratagem.StratagemDefinition;
+import com.aeroseira.cbcstratagems.stratagem.StratagemEnvironment;
 import com.aeroseira.cbcstratagems.stratagem.StratagemRegistry;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,11 +30,13 @@ public class StratagemMarkerEntity extends Entity {
     private static final String OWNER_UUID_KEY = "owner_uuid";
     private static final String REMAINING_TICKS_KEY = "remaining_ticks";
     private static final String COOLDOWN_STARTED_KEY = "cooldown_started";
+    private static final String ENVIRONMENT_CHECKED_KEY = "environment_checked";
 
     private ResourceLocation stratagemId;
     private UUID ownerUuid;
     private int remainingTicks;
     private boolean cooldownStarted;
+    private boolean environmentChecked;
 
     public StratagemMarkerEntity(EntityType<? extends StratagemMarkerEntity> entityType, Level level) {
         super(entityType, level);
@@ -68,6 +71,9 @@ public class StratagemMarkerEntity extends Entity {
             return;
         }
 
+        if (!validateEnvironment(serverLevel, definition.get())) {
+            return;
+        }
         startCooldownIfNeeded(serverLevel, definition.get());
         if (remainingTicks > 0) {
             remainingTicks--;
@@ -87,6 +93,7 @@ public class StratagemMarkerEntity extends Entity {
         }
         remainingTicks = compound.getInt(REMAINING_TICKS_KEY);
         cooldownStarted = compound.getBoolean(COOLDOWN_STARTED_KEY);
+        environmentChecked = compound.getBoolean(ENVIRONMENT_CHECKED_KEY);
         syncData();
     }
 
@@ -100,6 +107,7 @@ public class StratagemMarkerEntity extends Entity {
         }
         compound.putInt(REMAINING_TICKS_KEY, remainingTicks);
         compound.putBoolean(COOLDOWN_STARTED_KEY, cooldownStarted);
+        compound.putBoolean(ENVIRONMENT_CHECKED_KEY, environmentChecked);
     }
 
     @Override
@@ -127,6 +135,39 @@ public class StratagemMarkerEntity extends Entity {
         if (owner != null && definition.cooldownTicks() > 0) {
             PlayerStratagemDataManager.startCooldown(owner, definition.id(), level.getGameTime() + definition.cooldownTicks());
         }
+    }
+
+    private boolean validateEnvironment(ServerLevel level, StratagemDefinition definition) {
+        if (environmentChecked) {
+            return true;
+        }
+        environmentChecked = true;
+
+        if (!StratagemEnvironment.hasOpenSky(level, this.blockPosition())) {
+            denyStrike(level, Component.translatable("message.cbc_stratagems.input.no_sky"));
+            return false;
+        }
+
+        StratagemEnvironment.ObstructionResult result = StratagemEnvironment.validateObstructions(level, this.position(), definition);
+        if (!result.clear()) {
+            denyStrike(level, Component.translatable(
+                    "message.cbc_stratagems.strike.obstructed",
+                    result.obstructionBlocks(),
+                    result.maxObstructionBlocks()
+            ));
+            return false;
+        }
+
+        return true;
+    }
+
+    private void denyStrike(ServerLevel level, Component message) {
+        ServerPlayer owner = owner(level);
+        if (owner != null) {
+            owner.displayClientMessage(message, true);
+        }
+        level.playSound(null, this.getX(), this.getY(), this.getZ(), ModSoundEvents.STRIKE_DENIED.get(), SoundSource.PLAYERS, 0.8F, 1.0F);
+        this.discard();
     }
 
     private void notifyStrikeReady(ServerLevel level, StratagemDefinition definition) {

@@ -7,6 +7,7 @@ import com.aeroseira.cbcstratagems.registry.ModDataComponents;
 import com.aeroseira.cbcstratagems.registry.ModItems;
 import com.aeroseira.cbcstratagems.stratagem.StratagemCommand;
 import com.aeroseira.cbcstratagems.stratagem.StratagemDefinition;
+import com.aeroseira.cbcstratagems.stratagem.StratagemEnvironment;
 import com.aeroseira.cbcstratagems.stratagem.StratagemRegistry;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
@@ -42,9 +42,10 @@ public final class StratagemInputManager {
             return false;
         }
 
-        PlayerStratagemInputSession session = new PlayerStratagemInputSession();
+        boolean blocked = !StratagemEnvironment.hasOpenSky(player.serverLevel(), player.blockPosition());
+        PlayerStratagemInputSession session = new PlayerStratagemInputSession(blocked);
         SESSIONS.put(player.getUUID(), session);
-        sync(player, StratagemInputStatus.ACTIVE, session.input(), Optional.empty(), Component.empty());
+        syncInputState(player, session);
         return true;
     }
 
@@ -64,6 +65,10 @@ public final class StratagemInputManager {
         ItemStack deviceStack = player.getMainHandItem();
         if (!deviceStack.is(ModItems.STRATAGEM_DEVICE.get())) {
             cancel(player);
+            return;
+        }
+        if (session.inputBlocked()) {
+            syncInputState(player, session);
             return;
         }
 
@@ -142,6 +147,22 @@ public final class StratagemInputManager {
         player.displayClientMessage(message, true);
     }
 
+    private static void syncInputState(ServerPlayer player, PlayerStratagemInputSession session) {
+        if (session.inputBlocked()) {
+            sync(
+                    player,
+                    StratagemInputStatus.ACTIVE,
+                    List.of(),
+                    Optional.empty(),
+                    Component.translatable("message.cbc_stratagems.input.no_sky"),
+                    StratagemInputFeedback.BLOCKED
+            );
+            return;
+        }
+
+        sync(player, StratagemInputStatus.ACTIVE, session.input(), Optional.empty(), Component.empty());
+    }
+
     private static List<StratagemDefinition> findCandidates(List<StratagemCommand> input) {
         List<StratagemDefinition> candidates = new ArrayList<>();
         for (StratagemDefinition definition : StratagemRegistry.definitions()) {
@@ -162,11 +183,6 @@ public final class StratagemInputManager {
             }
         }
         return true;
-    }
-
-    private static boolean isOpenSky(ServerPlayer player) {
-        ServerLevel level = player.serverLevel();
-        return !level.dimensionType().hasCeiling() && level.canSeeSky(player.blockPosition());
     }
 
     private static void sync(
@@ -197,8 +213,21 @@ public final class StratagemInputManager {
                 SESSIONS.remove(entry.getKey());
             } else if (!player.getMainHandItem().is(ModItems.STRATAGEM_DEVICE.get())) {
                 cancel(player);
+            } else {
+                updateEnvironmentBlock(player, entry.getValue());
             }
         }
+    }
+
+    private static void updateEnvironmentBlock(ServerPlayer player, PlayerStratagemInputSession session) {
+        boolean blocked = !StratagemEnvironment.hasOpenSky(player.serverLevel(), player.blockPosition());
+        if (session.inputBlocked() == blocked) {
+            return;
+        }
+
+        session.setInputBlocked(blocked);
+        session.clear();
+        syncInputState(player, session);
     }
 
     private static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {

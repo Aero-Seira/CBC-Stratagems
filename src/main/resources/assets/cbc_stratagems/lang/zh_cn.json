@@ -22,6 +22,7 @@
   "message.cbc_stratagems.input.cooldown": "战略配备冷却中：%s 秒",
   "message.cbc_stratagems.input.timeout": "战略配备输入超时。",
   "message.cbc_stratagems.input.complete": "%s 已就绪。",
+  "message.cbc_stratagems.strike.obstructed": "火力路径受阻：%s/%s。",
   "message.cbc_stratagems.strike.not_implemented": "%s 打击调度尚未实现。",
   "overlay.cbc_stratagems.input.active": "战略配备输入",
   "overlay.cbc_stratagems.marker": "%s · %s 秒",

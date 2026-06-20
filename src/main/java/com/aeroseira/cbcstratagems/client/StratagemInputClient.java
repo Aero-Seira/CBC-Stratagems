@@ -61,6 +61,10 @@ public final class StratagemInputClient {
             rememberKeyStates(minecraft);
             return;
         }
+        if (StratagemClientState.isInputBlocked()) {
+            rememberKeyStates(minecraft);
+            return;
+        }
 
         sendOnRisingEdge(StratagemCommand.UP, rawUpDown, wasUpDown);
         sendOnRisingEdge(StratagemCommand.DOWN, rawDownDown, wasDownDown);
@@ -80,6 +84,11 @@ public final class StratagemInputClient {
 
         boolean callerDeviceHeld = isCallerDeviceHeld(minecraft);
         boolean selectedSlotStillActive = activeSlot < 0 || minecraft.player != null && minecraft.player.getInventory().selected == activeSlot;
+        if (StratagemClientState.inputStatus() == StratagemInputStatus.FAILED) {
+            inputBlockedUntilRelease = true;
+            closeInput(false);
+            return;
+        }
         if (StratagemClientState.shouldRenderInputOverlay() && (!selectedSlotStillActive || minecraft.screen != null)) {
             closeInput(true);
             return;
@@ -114,7 +123,11 @@ public final class StratagemInputClient {
         if (shouldBeOpen && !controlActive) {
             controlActive = true;
             activeSlot = minecraft.player.getInventory().selected;
-            StratagemClientState.beginLocalInput();
+            if (hasLocalOpenSky(minecraft)) {
+                StratagemClientState.beginLocalInput();
+            } else {
+                StratagemClientState.beginLocalBlockedInput(Component.translatable("message.cbc_stratagems.input.no_sky"));
+            }
             PacketDistributor.sendToServer(new ServerboundStratagemInputControlPacket(true));
         } else if (!shouldBeOpen && controlActive) {
             closeInput(true);
@@ -360,6 +373,9 @@ public final class StratagemInputClient {
         if (StratagemClientState.inputFeedback() == StratagemInputFeedback.ERROR) {
             return 0xFF5555;
         }
+        if (StratagemClientState.inputFeedback() == StratagemInputFeedback.BLOCKED) {
+            return 0xFF5555;
+        }
         if (StratagemClientState.inputFeedback() == StratagemInputFeedback.COOLDOWN) {
             return 0xFFFF55;
         }
@@ -369,5 +385,11 @@ public final class StratagemInputClient {
             case ACTIVE -> 0xFFFFFF;
             case INACTIVE -> 0xAAAAAA;
         };
+    }
+
+    private static boolean hasLocalOpenSky(Minecraft minecraft) {
+        return minecraft.player != null
+                && !minecraft.player.level().dimensionType().hasCeiling()
+                && minecraft.player.level().canSeeSky(minecraft.player.blockPosition());
     }
 }

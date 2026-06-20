@@ -8,7 +8,8 @@ import net.minecraft.util.StringRepresentable;
 public enum StratagemInputFeedback implements StringRepresentable {
     NONE("none"),
     ERROR("error"),
-    COOLDOWN("cooldown");
+    COOLDOWN("cooldown"),
+    BLOCKED("blocked");
 
     public static final StreamCodec<ByteBuf, StratagemInputFeedback> STREAM_CODEC = ByteBufCodecs.STRING_UTF8.map(
             StratagemInputFeedback::bySerializedName,

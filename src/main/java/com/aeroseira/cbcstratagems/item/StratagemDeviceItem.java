@@ -5,6 +5,7 @@ import com.aeroseira.cbcstratagems.player.PlayerStratagemDataManager;
 import com.aeroseira.cbcstratagems.registry.ModDataComponents;
 import com.aeroseira.cbcstratagems.registry.ModItems;
 import com.aeroseira.cbcstratagems.registry.ModSoundEvents;
+import com.aeroseira.cbcstratagems.stratagem.StratagemEnvironment;
 import com.aeroseira.cbcstratagems.stratagem.StratagemRegistry;
 import com.aeroseira.cbcstratagems.stratagem.input.StratagemInputManager;
 import net.minecraft.network.chat.Component;
@@ -85,7 +86,7 @@ public class StratagemDeviceItem extends Item {
         }
 
         StratagemRegistry.get(stratagemId).ifPresentOrElse(definition -> {
-            if (!isOpenSky(player)) {
+            if (!StratagemEnvironment.hasOpenSky(player.serverLevel(), player.blockPosition())) {
                 player.displayClientMessage(Component.translatable("message.cbc_stratagems.input.no_sky"), true);
                 return;
             }
@@ -105,10 +106,6 @@ public class StratagemDeviceItem extends Item {
     private static void resetDevice(ItemStack deviceStack) {
         deviceStack.set(ModDataComponents.DEVICE_MODE, StratagemDeviceMode.CALLER);
         deviceStack.remove(ModDataComponents.SELECTED_STRATAGEM);
-    }
-
-    private static boolean isOpenSky(ServerPlayer player) {
-        return !player.serverLevel().dimensionType().hasCeiling() && player.serverLevel().canSeeSky(player.blockPosition());
     }
 
     private static void unlockFromLicense(ServerPlayer player, ItemStack licenseStack) {

@@ -22,6 +22,7 @@
   "message.cbc_stratagems.input.cooldown": "Stratagem cooling down: %s s",
   "message.cbc_stratagems.input.timeout": "Stratagem input timed out.",
   "message.cbc_stratagems.input.complete": "%s ready.",
+  "message.cbc_stratagems.strike.obstructed": "Fire path obstructed: %s/%s.",
   "message.cbc_stratagems.strike.not_implemented": "%s strike scheduling is not implemented yet.",
   "overlay.cbc_stratagems.input.active": "Stratagem input",
   "overlay.cbc_stratagems.marker": "%s · %ss",

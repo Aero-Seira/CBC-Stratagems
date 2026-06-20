@@ -6,8 +6,10 @@ import java.util.List;
 
 final class PlayerStratagemInputSession {
     private final List<StratagemCommand> input = new ArrayList<>();
+    private boolean inputBlocked;
 
-    PlayerStratagemInputSession() {
+    PlayerStratagemInputSession(boolean inputBlocked) {
+        this.inputBlocked = inputBlocked;
     }
 
     void add(StratagemCommand command) {
@@ -20,5 +22,13 @@ final class PlayerStratagemInputSession {
 
     List<StratagemCommand> input() {
         return List.copyOf(input);
+    }
+
+    boolean inputBlocked() {
+        return inputBlocked;
+    }
+
+    void setInputBlocked(boolean inputBlocked) {
+        this.inputBlocked = inputBlocked;
     }
 }

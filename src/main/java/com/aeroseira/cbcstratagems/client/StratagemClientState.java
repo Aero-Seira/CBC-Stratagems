@@ -67,7 +67,8 @@ public final class StratagemClientState {
         inputFeedbackTicks = packet.status() == StratagemInputStatus.FAILED || packet.status() == StratagemInputStatus.COMPLETE
                 ? INPUT_FEEDBACK_TICKS
                 : 0;
-        inputMessageTicks = packet.status() == StratagemInputStatus.ACTIVE && packet.feedback() != StratagemInputFeedback.NONE
+        inputMessageTicks = packet.status() == StratagemInputStatus.ACTIVE
+                && (packet.feedback() == StratagemInputFeedback.ERROR || packet.feedback() == StratagemInputFeedback.COOLDOWN)
                 ? INPUT_MESSAGE_TICKS
                 : 0;
     }
@@ -78,6 +79,16 @@ public final class StratagemClientState {
         selectedStratagem = Optional.empty();
         inputMessage = Component.empty();
         inputFeedback = StratagemInputFeedback.NONE;
+        inputFeedbackTicks = 0;
+        inputMessageTicks = 0;
+    }
+
+    public static void beginLocalBlockedInput(Component message) {
+        inputStatus = StratagemInputStatus.ACTIVE;
+        currentInput = List.of();
+        selectedStratagem = Optional.empty();
+        inputMessage = message;
+        inputFeedback = StratagemInputFeedback.BLOCKED;
         inputFeedbackTicks = 0;
         inputMessageTicks = 0;
     }
@@ -130,6 +141,10 @@ public final class StratagemClientState {
 
     public static boolean isInputActive() {
         return inputStatus == StratagemInputStatus.ACTIVE;
+    }
+
+    public static boolean isInputBlocked() {
+        return isInputActive() && inputFeedback == StratagemInputFeedback.BLOCKED;
     }
 
     public static boolean shouldRenderInputOverlay() {
